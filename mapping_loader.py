@@ -1,3 +1,5 @@
+# mapping_loader.py
+
 import json
 from pathlib import Path
 
@@ -23,7 +25,7 @@ def load_mapping(mapping_path):
     used_mappings = data.get('mappings', {})
     not_used = data.get('not_used', [])
 
-    # Flatten the vendor field for easier comparison later
+    # Create a dictionary for used mappings
     mapping_dict = {
         'used': {v['vendor']: k for k, v in used_mappings.items() if v.get('map')},
         'used_reverse': {k: v['vendor'] for k, v in used_mappings.items() if v.get('map')},
