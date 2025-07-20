@@ -14,12 +14,16 @@ def update_mapping_dict(mapping_dict):
 
 
 def load_mapping(mapping_path) -> dict:
+    """
+    Load and parse the mapping.json file.
+    Returns:
+        dict: with keys 'mappings', 'not_used'
+    """
     try:
-        """
-        Load and parse the mapping.json file.
-        Returns:
-            dict: with keys 'mappings', 'not_used'
-        """
+        if not mapping_path.exists():
+            print(f"Mapping file does not exist: {mapping_path}")
+            return {}
+
         with open(mapping_path, 'r', encoding='utf-8') as f:
             data = json.load(f)
 

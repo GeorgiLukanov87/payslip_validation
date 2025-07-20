@@ -12,6 +12,9 @@ def load_gtn_excel(path: Path) -> pd.DataFrame:
     Assumes pay elements start at column index 4 (i.e., column E).
     """
     try:
+        if not path.exists():
+            print(f"GTN file not found at path: {path}")
+            return pd.DataFrame()
         df = pd.read_excel(path, engine='openpyxl')
         df.columns = df.columns.str.strip()
         return df
@@ -39,6 +42,9 @@ def extract_employee_ids(df: DataFrame, col_name: str) -> list:
     Extracts employee IDs from given column.
     """
     try:
+        if col_name not in df.columns:
+            print(f"Column '{col_name}' not found in DataFrame.")
+            return []
         return df[col_name].dropna().astype(str).unique().tolist()
     except Exception as e:
         print(f"Error extracting employee IDs: {e}")
