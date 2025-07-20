@@ -3,7 +3,7 @@
 import pandas as pd
 
 
-def check_gtn_numeric_elements(gtn_df: pd.DataFrame, mapping: dict):
+def check_gtn_numeric_elements(gtn_df: pd.DataFrame, mapping: dict) -> list:
     """
     Check that all mapped GTN element columns contain numeric values.
     Returns a list of element names that contain non-numeric values.

@@ -11,9 +11,13 @@ def load_gtn_excel(path: Path) -> pd.DataFrame:
     Load GTN Excel file and return as DataFrame.
     Assumes pay elements start at column index 4 (i.e., column E).
     """
-    df = pd.read_excel(path, engine='openpyxl')
-    df.columns = df.columns.str.strip()
-    return df
+    try:
+        df = pd.read_excel(path, engine='openpyxl')
+        df.columns = df.columns.str.strip()
+        return df
+    except Exception as e:
+        print(f"Error loading GTN Excel file: {e}")
+        return pd.DataFrame()
 
 
 def load_payrun_excel(path: str) -> pd.DataFrame:
@@ -21,30 +25,43 @@ def load_payrun_excel(path: str) -> pd.DataFrame:
     Load Payrun Excel file and return as DataFrame.
     Assumes pay elements start at column index 25 (i.e., column Z).
     """
-    df = pd.read_excel(path, engine='openpyxl')
-    df.columns = df.columns.str.strip()
-    return df
+    try:
+        df = pd.read_excel(path, engine='openpyxl')
+        df.columns = df.columns.str.strip()
+        return df
+    except Exception as e:
+        print(f"Error loading Payrun Excel file: {e}")
+        return pd.DataFrame()
 
 
 def extract_employee_ids(df: DataFrame, col_name: str) -> list:
     """
     Extracts employee IDs from given column.
     """
-    return df[col_name].dropna().astype(str).unique().tolist()
+    try:
+        return df[col_name].dropna().astype(str).unique().tolist()
+    except Exception as e:
+        print(f"Error extracting employee IDs: {e}")
+        return []
 
 
 def get_gtn_elements(df: DataFrame) -> list:
-    return df.columns[4:].tolist()  # from column E
+    try:
+        return df.columns[4:].tolist()  # from column E
+    except Exception as e:
+        print(f"Error getting GTN elements: {e}")
+        return []
 
 
 def get_payrun_elements_from_row_2(filepath: str) -> list:  # from column Z2
-    df = pd.read_excel(filepath, sheet_name="Payrun file", header=1)
-    df.columns = df.columns.str.strip()
-
-    all_cols = df.columns.tolist()
-    valid_cols = [col for col in all_cols[25:] if not col.startswith("Unnamed")]
-
-    return valid_cols
+    try:
+        df = pd.read_excel(filepath, sheet_name="Payrun file", header=1)
+        df.columns = df.columns.str.strip()
+        all_cols = df.columns.tolist()
+        return [col for col in all_cols[25:] if not col.startswith("Unnamed")]
+    except Exception as e:
+        print(f"Error getting payrun elements from row 2: {e}")
+        return []
 
 
 def get_combined_payrun_elements(filepath: str) -> list:
@@ -52,14 +69,17 @@ def get_combined_payrun_elements(filepath: str) -> list:
     Combine payrun elements from both header=0 and header=1
     to include all valid pay elements (e.g., Net Pay, Gross Pay).
     """
-    df0 = pd.read_excel(filepath, sheet_name="Payrun file", header=0)
-    df1 = pd.read_excel(filepath, sheet_name="Payrun file", header=1)
+    try:
+        df0 = pd.read_excel(filepath, sheet_name="Payrun file", header=0)
+        df1 = pd.read_excel(filepath, sheet_name="Payrun file", header=1)
 
-    cols0 = [col.strip() for col in df0.columns if not str(col).startswith("Unnamed")]
-    cols1 = [col.strip() for col in df1.columns if not str(col).startswith("Unnamed")]
+        cols0 = [col.strip() for col in df0.columns if not str(col).startswith("Unnamed")]
+        cols1 = [col.strip() for col in df1.columns if not str(col).startswith("Unnamed")]
 
-    combined = sorted(set(cols0 + cols1))
-    return combined
+        return sorted(set(cols0 + cols1))
+    except Exception as e:
+        print(f"Error combining payrun elements: {e}")
+        return []
 
 
 def get_complete_mapped_payrun_data(filepath: str, extra_columns: list) -> pd.DataFrame:
@@ -67,46 +87,57 @@ def get_complete_mapped_payrun_data(filepath: str, extra_columns: list) -> pd.Da
     Load Payrun data and combine columns from header=1 and header=0
     and return as DataFrame.
     """
-    # Base elements from header=1
-    df_main = pd.read_excel(filepath, sheet_name="Payrun file", header=1)
-    df_main.columns = df_main.columns.str.strip()
-    valid_cols = get_payrun_elements_from_row_2(filepath)
-    df_main = df_main[valid_cols]
+    try:
+        # Base elements from header=1
+        df_main = pd.read_excel(filepath, sheet_name="Payrun file", header=1)
+        df_main.columns = df_main.columns.str.strip()
+        valid_cols = get_payrun_elements_from_row_2(filepath)
+        df_main = df_main[valid_cols]
 
-    # Special columns from header=0
-    df_header0 = pd.read_excel(filepath, sheet_name="Payrun file", header=0)
-    df_header0.columns = df_header0.columns.str.strip()
-    existing_extras = [col for col in extra_columns if col in df_header0.columns]
-    df_extras = df_header0[existing_extras]
+        # Special columns from header=0
+        df_header0 = pd.read_excel(filepath, sheet_name="Payrun file", header=0)
+        df_header0.columns = df_header0.columns.str.strip()
+        existing_extras = [col for col in extra_columns if col in df_header0.columns]
+        df_extras = df_header0[existing_extras]
 
-    # Combine columns
-    df_combined = pd.concat([df_main, df_extras], axis=1)
-    return df_combined
+        # Combine columns
+        df_combined = pd.concat([df_main, df_extras], axis=1)
+        return df_combined
+
+    except Exception as e:
+        print(f"Error getting complete mapped payrun data: {e}")
+        return pd.DataFrame()
 
 
 def get_payrun_data_from_row_2(filepath: str) -> pd.DataFrame:
-    df = pd.read_excel(filepath, sheet_name="Payrun file", header=1)
-    df.columns = df.columns.str.strip()
+    try:
+        df = pd.read_excel(filepath, sheet_name="Payrun file", header=1)
+        df.columns = df.columns.str.strip()
+        valid_cols = get_payrun_elements_from_row_2(filepath)
+        df = df[valid_cols]
+        return df
 
-    valid_cols = get_payrun_elements_from_row_2(filepath)
-    df = df[valid_cols]
-
-    return df
+    except Exception as e:
+        print(f"Error getting payrun data from row 2: {e}")
+        return pd.DataFrame()
 
 
 def get_final_payrun_target_columns(filepath: str, mapping: dict) -> pd.DataFrame:
-    mapped_labels = list(mapping['used_reverse'].keys())
-    special_cols = [col for col in mapped_labels if col in ["Net Pay", "Gross Pay", "Total Employer Cost"]]
+    try:
+        mapped_labels = list(mapping['used_reverse'].keys())
+        special_cols = [col for col in mapped_labels if col in ["Net Pay", "Gross Pay", "Total Employer Cost"]]
+        df = get_complete_mapped_payrun_data(filepath, special_cols)
 
-    df = get_complete_mapped_payrun_data(filepath, special_cols)
+        # Target columns based on the mapping
+        final_cols = [col for col in [
+            'Net Pay', 'Tax', 'Pension ER', 'Gross Pay', 'BIK Voucher Payment', 'Basic Pay / SalaryUK',
+            'BIK Health', 'Bonus', 'Backpay', 'Total Employer Cost'
+        ] if col in df.columns]
+        return df[final_cols]
 
-    # Target columns based on the mapping
-    final_cols = [col for col in [
-        'Net Pay', 'Tax', 'Pension ER', 'Gross Pay', 'BIK Voucher Payment', 'Basic Pay / SalaryUK',
-        'BIK Health', 'Bonus', 'Backpay', 'Total Employer Cost'
-    ] if col in df.columns]
-
-    return df[final_cols]
+    except Exception as e:
+        print(f"Error getting final payrun target columns: {e}")
+        return pd.DataFrame()
 
 
 if __name__ == "__main__":

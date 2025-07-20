@@ -13,28 +13,29 @@ def update_mapping_dict(mapping_dict):
                                     mapping_dict['used_reverse'].items()}
 
 
-def load_mapping(mapping_path):
-    """
-    Load and parse the mapping.json file.
-    Returns:
-        dict: with keys 'mappings', 'not_used'
-    """
-    with open(mapping_path, 'r', encoding='utf-8') as f:
-        data = json.load(f)
+def load_mapping(mapping_path) -> dict:
+    try:
+        """
+        Load and parse the mapping.json file.
+        Returns:
+            dict: with keys 'mappings', 'not_used'
+        """
+        with open(mapping_path, 'r', encoding='utf-8') as f:
+            data = json.load(f)
 
-    used_mappings = data.get('mappings', {})
-    not_used = data.get('not_used', [])
+        used_mappings = data.get('mappings', {})
+        not_used = data.get('not_used', [])
 
-    # Create a dictionary for used mappings
-    mapping_dict = {
-        'used': {v['vendor']: k for k, v in used_mappings.items() if v.get('map')},
-        'used_reverse': {k: v['vendor'] for k, v in used_mappings.items() if v.get('map')},
-        'not_used': [x['vendor'] for x in not_used]
-    }
+        # Create a dictionary for used mappings
+        mapping_dict = {'used': {v['vendor']: k for k, v in used_mappings.items() if v.get('map')},
+                        'used_reverse': {k: v['vendor'] for k, v in used_mappings.items() if v.get('map')},
+                        'not_used': [x['vendor'] for x in not_used]}
+        update_mapping_dict(mapping_dict)
+        return mapping_dict
 
-    update_mapping_dict(mapping_dict)
-
-    return mapping_dict
+    except Exception as e:
+        print(f"Error loading mapping file: {e}")
+        return {}
 
 
 if __name__ == "__main__":
