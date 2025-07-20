@@ -9,7 +9,8 @@ LOG_FILE = os.path.join(LOG_DIR, "app.log")
 
 os.makedirs(LOG_DIR, exist_ok=True)
 
-logger = logging.getLogger("gtn_logger")
+logger = logging.getLogger("payslip_logger")
+logger.propagate = False  # Prevent propagation to root logger
 logger.setLevel(logging.DEBUG)
 
 # Console handler

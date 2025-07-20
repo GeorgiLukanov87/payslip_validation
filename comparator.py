@@ -18,10 +18,6 @@ def normalize_employee_ids(ids: list[str]) -> list[str]:
 def compare_employees(gtn_ids: list, payrun_ids: list) -> tuple:
     """
     Compares employee ID lists from GTN and Payrun.
-
-    Returns:
-        missing_in_gtn: IDs present in Payrun but not in GTN
-        missing_in_payrun: IDs present in GTN but not in Payrun
     """
     try:
         gtn_ids_norm = set(normalize_employee_ids(gtn_ids))
@@ -30,10 +26,13 @@ def compare_employees(gtn_ids: list, payrun_ids: list) -> tuple:
         missing_in_gtn = sorted(list(payrun_ids_norm - gtn_ids_norm))
         missing_in_payrun = sorted(list(gtn_ids_norm - payrun_ids_norm))
 
+        logger.info("Employee comparison completed", extra={
+            "missing_in_gtn": missing_in_gtn,
+            "missing_in_payrun": missing_in_payrun
+        })
         return missing_in_gtn, missing_in_payrun
-
     except Exception as e:
-        logger.error(f"Error comparing employees: {e}")
+        logger.error("Error comparing employees", extra={"error": str(e)})
         return [], []
 
 

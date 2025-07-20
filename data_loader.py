@@ -5,6 +5,9 @@ from pathlib import Path
 from pandas import DataFrame
 from logger_config import logger
 
+GTN_PAY_ELEMENTS_START_INDEX = 4
+PAYRUN_ELEMENTS_START_INDEX = 25
+
 
 def load_gtn_excel(path: Path) -> pd.DataFrame:
     """
@@ -56,10 +59,10 @@ def extract_employee_ids(df: DataFrame, col_name: str) -> list:
 
 def get_gtn_elements(df: DataFrame) -> list:
     try:
-        if df.empty or len(df.columns) < 5:
+        if df.empty or len(df.columns) < GTN_PAY_ELEMENTS_START_INDEX + 1:
             logger.warning("GTN DataFrame is empty or has insufficient columns.")
             return []
-        return df.columns[4:].tolist()  # from column E
+        return df.columns[GTN_PAY_ELEMENTS_START_INDEX:].tolist()  # from column E
     except Exception as e:
         logger.error(f"Error getting GTN elements: {e}")
         return []
@@ -73,7 +76,7 @@ def get_payrun_elements_from_row_2(filepath: str) -> list:  # from column Z2
         df = pd.read_excel(filepath, sheet_name="Payrun file", header=1)
         df.columns = df.columns.str.strip()
         all_cols = df.columns.tolist()
-        return [col for col in all_cols[25:] if not col.startswith("Unnamed")]
+        return [col for col in all_cols[PAYRUN_ELEMENTS_START_INDEX:] if not col.startswith("Unnamed")]
     except Exception as e:
         logger.error(f"Error getting payrun elements from row 2: {e}")
         return []

@@ -6,6 +6,7 @@ import pandas as pd
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from comparator import compare_employees
 
+
 def extract_employee_ids(df: pd.DataFrame, col_name: str):
     if col_name not in df.columns:
         raise KeyError(f"Missing column '{col_name}' in file. Available columns: {list(df.columns)}")
