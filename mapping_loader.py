@@ -21,10 +21,6 @@ def load_mapping(mapping_path: Path) -> dict:
         dict: with keys 'mappings', 'not_used'
     """
     try:
-        if not mapping_path.exists():
-            print(f"Mapping file does not exist: {mapping_path}")
-            return {}
-
         with open(mapping_path, 'r', encoding='utf-8') as f:
             data = json.load(f)
 
