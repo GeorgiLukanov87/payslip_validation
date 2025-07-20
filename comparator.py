@@ -1,4 +1,8 @@
 # comparator.py
+
+from logger_config import logger
+
+
 def normalize_employee_ids(ids: list[str]) -> list[str]:
     """
     Normalize employee IDs by removing decimals and converting to string.
@@ -7,7 +11,7 @@ def normalize_employee_ids(ids: list[str]) -> list[str]:
     try:
         return [str(int(float(emp_id))) for emp_id in ids]
     except Exception as e:
-        print(f"Error normalizing employee IDs: {e}")
+        logger.error(f"Error normalizing employee IDs: {e}")
         return []
 
 
@@ -29,7 +33,7 @@ def compare_employees(gtn_ids: list, payrun_ids: list) -> tuple:
         return missing_in_gtn, missing_in_payrun
 
     except Exception as e:
-        print(f"Error comparing employees: {e}")
+        logger.error(f"Error comparing employees: {e}")
         return [], []
 
 
@@ -54,18 +58,17 @@ def compare_elements(gtn_elements: list[str], payrun_elements: list[str], mappin
         return missing_in_gtn, missing_in_payrun
 
     except Exception as e:
-        print(f"Error comparing elements: {e}")
+        logger.error(f"Error comparing elements: {e}")
         return [], []
 
 
 if __name__ == "__main__":
-    # test the employee comparison function
     gtn = ['1000', '1001', '1002']
     payrun = ['1000.0', '1001.0', '1003.0']
 
     m1, m2 = compare_employees(gtn, payrun)
-    print("Missing in GTN:", m1)  # ['1003']
-    print("Missing in Payrun:", m2)  # ['1002']
+    logger.info("Missing in GTN: %s", m1)
+    logger.info("Missing in Payrun: %s", m2)
 
     gtn_els = ['element1', 'element3', 'element4']
     payrun_els = ['Tax', 'Pension ER', 'Bonus']
@@ -85,5 +88,5 @@ if __name__ == "__main__":
     }
 
     mg, mp = compare_elements(gtn_els, payrun_els, mock_mapping)
-    print("Missing mapped GTN elements:", mg)  # expected ['element6']
-    print("Missing mapped Payrun elements:", mp)  # expected ['Net Pay']
+    logger.info("Missing mapped GTN elements: %s", mg)
+    logger.info("Missing mapped Payrun elements: %s", mp)

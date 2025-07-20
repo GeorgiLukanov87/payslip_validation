@@ -2,8 +2,8 @@
 
 import pandas as pd
 from pathlib import Path
-
 from pandas import DataFrame
+from logger_config import logger
 
 
 def load_gtn_excel(path: Path) -> pd.DataFrame:
@@ -13,13 +13,13 @@ def load_gtn_excel(path: Path) -> pd.DataFrame:
     """
     try:
         if not path.exists():
-            print(f"GTN file not found at path: {path}")
+            logger.error(f"GTN file not found at path: {path}")
             return pd.DataFrame()
         df = pd.read_excel(path, engine='openpyxl')
         df.columns = df.columns.str.strip()
         return df
     except Exception as e:
-        print(f"Error loading GTN Excel file: {e}")
+        logger.error(f"Error loading GTN Excel file: {e}")
         return pd.DataFrame()
 
 
@@ -29,11 +29,14 @@ def load_payrun_excel(path: str) -> pd.DataFrame:
     Assumes pay elements start at column index 25 (i.e., column Z).
     """
     try:
+        if not Path(path).exists():
+            logger.error(f"Payrun file not found at path: {path}")
+            return pd.DataFrame()
         df = pd.read_excel(path, engine='openpyxl')
         df.columns = df.columns.str.strip()
         return df
     except Exception as e:
-        print(f"Error loading Payrun Excel file: {e}")
+        logger.error(f"Error loading Payrun Excel file: {e}")
         return pd.DataFrame()
 
 
@@ -43,30 +46,36 @@ def extract_employee_ids(df: DataFrame, col_name: str) -> list:
     """
     try:
         if col_name not in df.columns:
-            print(f"Column '{col_name}' not found in DataFrame.")
+            logger.warning(f"Column '{col_name}' not found in DataFrame.")
             return []
         return df[col_name].dropna().astype(str).unique().tolist()
     except Exception as e:
-        print(f"Error extracting employee IDs: {e}")
+        logger.error(f"Error extracting employee IDs: {e}")
         return []
 
 
 def get_gtn_elements(df: DataFrame) -> list:
     try:
+        if df.empty or len(df.columns) < 5:
+            logger.warning("GTN DataFrame is empty or has insufficient columns.")
+            return []
         return df.columns[4:].tolist()  # from column E
     except Exception as e:
-        print(f"Error getting GTN elements: {e}")
+        logger.error(f"Error getting GTN elements: {e}")
         return []
 
 
 def get_payrun_elements_from_row_2(filepath: str) -> list:  # from column Z2
     try:
+        if not Path(filepath).exists():
+            logger.error(f"Payrun file not found at path: {filepath}")
+            return []
         df = pd.read_excel(filepath, sheet_name="Payrun file", header=1)
         df.columns = df.columns.str.strip()
         all_cols = df.columns.tolist()
         return [col for col in all_cols[25:] if not col.startswith("Unnamed")]
     except Exception as e:
-        print(f"Error getting payrun elements from row 2: {e}")
+        logger.error(f"Error getting payrun elements from row 2: {e}")
         return []
 
 
@@ -76,6 +85,9 @@ def get_combined_payrun_elements(filepath: str) -> list:
     to include all valid pay elements (e.g., Net Pay, Gross Pay).
     """
     try:
+        if not Path(filepath).exists():
+            logger.error(f"Payrun file not found at path: {filepath}")
+            return []
         df0 = pd.read_excel(filepath, sheet_name="Payrun file", header=0)
         df1 = pd.read_excel(filepath, sheet_name="Payrun file", header=1)
 
@@ -84,7 +96,7 @@ def get_combined_payrun_elements(filepath: str) -> list:
 
         return sorted(set(cols0 + cols1))
     except Exception as e:
-        print(f"Error combining payrun elements: {e}")
+        logger.error(f"Error combining payrun elements: {e}")
         return []
 
 
@@ -94,29 +106,32 @@ def get_complete_mapped_payrun_data(filepath: str, extra_columns: list) -> pd.Da
     and return as DataFrame.
     """
     try:
-        # Base elements from header=1
+        if not Path(filepath).exists():
+            logger.error(f"Payrun file not found at path: {filepath}")
+            return pd.DataFrame()
         df_main = pd.read_excel(filepath, sheet_name="Payrun file", header=1)
         df_main.columns = df_main.columns.str.strip()
         valid_cols = get_payrun_elements_from_row_2(filepath)
         df_main = df_main[valid_cols]
 
-        # Special columns from header=0
         df_header0 = pd.read_excel(filepath, sheet_name="Payrun file", header=0)
         df_header0.columns = df_header0.columns.str.strip()
         existing_extras = [col for col in extra_columns if col in df_header0.columns]
         df_extras = df_header0[existing_extras]
 
-        # Combine columns
         df_combined = pd.concat([df_main, df_extras], axis=1)
         return df_combined
 
     except Exception as e:
-        print(f"Error getting complete mapped payrun data: {e}")
+        logger.error(f"Error getting complete mapped payrun data: {e}")
         return pd.DataFrame()
 
 
 def get_payrun_data_from_row_2(filepath: str) -> pd.DataFrame:
     try:
+        if not Path(filepath).exists():
+            logger.error(f"Payrun file not found at path: {filepath}")
+            return pd.DataFrame()
         df = pd.read_excel(filepath, sheet_name="Payrun file", header=1)
         df.columns = df.columns.str.strip()
         valid_cols = get_payrun_elements_from_row_2(filepath)
@@ -124,17 +139,19 @@ def get_payrun_data_from_row_2(filepath: str) -> pd.DataFrame:
         return df
 
     except Exception as e:
-        print(f"Error getting payrun data from row 2: {e}")
+        logger.error(f"Error getting payrun data from row 2: {e}")
         return pd.DataFrame()
 
 
 def get_final_payrun_target_columns(filepath: str, mapping: dict) -> pd.DataFrame:
     try:
+        if not Path(filepath).exists():
+            logger.error(f"Payrun file not found at path: {filepath}")
+            return pd.DataFrame()
         mapped_labels = list(mapping['used_reverse'].keys())
         special_cols = [col for col in mapped_labels if col in ["Net Pay", "Gross Pay", "Total Employer Cost"]]
         df = get_complete_mapped_payrun_data(filepath, special_cols)
 
-        # Target columns based on the mapping
         final_cols = [col for col in [
             'Net Pay', 'Tax', 'Pension ER', 'Gross Pay', 'BIK Voucher Payment', 'Basic Pay / SalaryUK',
             'BIK Health', 'Bonus', 'Backpay', 'Total Employer Cost'
@@ -142,7 +159,7 @@ def get_final_payrun_target_columns(filepath: str, mapping: dict) -> pd.DataFram
         return df[final_cols]
 
     except Exception as e:
-        print(f"Error getting final payrun target columns: {e}")
+        logger.error(f"Error getting final payrun target columns: {e}")
         return pd.DataFrame()
 
 
@@ -157,15 +174,14 @@ if __name__ == "__main__":
     gtn_employee_ids = extract_employee_ids(gtn_df, 'employee_id')
     payrun_employee_ids = extract_employee_ids(payrun_df, 'Employee ID')
 
-    print(f"GTN count: {len(gtn_employee_ids)} \n employee_ids: ", gtn_employee_ids)
-    print(f"Payrun count: {len(payrun_employee_ids)} \n employee_ids: ", payrun_employee_ids)
+    logger.info(f"GTN count: {len(gtn_employee_ids)} \n employee_ids: {gtn_employee_ids}")
+    logger.info(f"Payrun count: {len(payrun_employee_ids)} \n employee_ids: {payrun_employee_ids}")
 
-    print("\nGTN elements:", get_gtn_elements(gtn_df))
-    print("Payrun elements (combined):", get_combined_payrun_elements(payrun_path_str))
+    logger.info("\nGTN elements: %s", get_gtn_elements(gtn_df))
+    logger.info("Payrun elements (combined): %s", get_combined_payrun_elements(payrun_path_str))
 
     payrun_data = get_payrun_data_from_row_2(payrun_path_str)
-    print("\nSample payrun data:")
-    print(payrun_data.head())
+    logger.info("\nSample payrun data:\n%s", payrun_data.head())
 
 """
 GTN count: 36

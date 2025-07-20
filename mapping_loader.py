@@ -2,9 +2,10 @@
 
 import json
 from pathlib import Path
+from logger_config import logger
 
 
-def update_mapping_dict(mapping_dict):
+def update_mapping_dict(mapping_dict: dict) -> None:
     # update mapping_dict "element2": "BIKHealth" to "BIK Health" in used
     mapping_dict['used'] = {k: v.replace('BIKHealth', 'BIK Health') for k, v in mapping_dict['used'].items()}
 
@@ -13,7 +14,7 @@ def update_mapping_dict(mapping_dict):
                                     mapping_dict['used_reverse'].items()}
 
 
-def load_mapping(mapping_path) -> dict:
+def load_mapping(mapping_path: Path) -> dict:
     """
     Load and parse the mapping.json file.
     Returns:
@@ -45,7 +46,7 @@ def load_mapping(mapping_path) -> dict:
 if __name__ == "__main__":
     path = Path('data/mapping.json')
     mappings = load_mapping(path)
-    print(json.dumps(mappings, indent=2))
+    logger.info(json.dumps(mappings, indent=2))
 
 """ 
 mapping_dict = 
